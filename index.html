@@ -57,6 +57,15 @@
         onEachFeature: onEachFeature
       }).addTo(map);
     });
+  
+  fetch('./cambridge/combined.geojson')
+    .then(response => response.json())
+    .then(data => {
+      L.geoJSON(data, {
+        style: getStyle,
+        onEachFeature: onEachFeature
+      }).addTo(map);
+    });
 </script>
 </body>
 </html>
