@@ -1,71 +1,121 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Unused FAR - Development Potential</title>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <style>
-    body { margin: 0; padding: 0; }
-    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-  </style>
-</head>
-<body>
-<div id="map"></div>
-<script>
-  // Initialize the map
-  const map = L.map('map').setView([42.3601, -71.0589], 12);
-  // Add base map tiles
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-  }).addTo(map);
-  // Style function to create the heatmap based on Unused FAR
-  function getStyle(feature) {
-    const unusedFar = feature.properties.Unused_FAR;
-    let fillColor = "blue"; // Red (no/negative potential)
-    if (unusedFar > 2.0) {
-      fillColor = "green"; // Teal/Green (high potential)
-    } else if (unusedFar > 0) {
-      fillColor = "red"; // Yellow (some potential)
+  <head>
+    <title>Unused FAR - Development Potential</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+
+      .legend {
+        padding: 8px 24px;
+        background: white; /* This sets the background to white */
+        border-radius: 5px; /* Adds rounded corners */
+        box-shadow: 0 0 15px rgba(0,0,0,0.2); /* Adds a subtle shadow */
     }
-    return {
-      fillColor: fillColor,
-      weight: 0.5,
-      opacity: 1,
-      color: 'black',
-      fillOpacity: 0.7
-    };
-  }
-  // Popup function for interactivity
-  function onEachFeature(feature, layer) {
-    if (feature.properties) {
-        const props = feature.properties;
-        layer.bindPopup(`
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      function getColor(sqft) {
+        if (sqft > 250000) return "#BE6922"; // Purple
+        if (sqft > 100000) return "#CA9A5C"; // Purple
+        if (sqft > 60000) return "#C6A44D"; // Purple
+        if (sqft > 30000) return "#C6A44D"; // Red
+        if (sqft > 10000) return "#CFB874"; // Orange
+        if (sqft > 0) return "#fee08b"; // Yellow
+        return "#D4D4D4"; // Gray
+      }
+
+      // Initialize the map
+      const map = L.map("map").setView([42.3601, -71.0589], 12);
+      // Add base map tiles
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        }
+      ).addTo(map);
+      // Style function to create the heatmap based on Unused FAR
+      function getStyle(feature) {
+        const unusedFar = feature.properties.Unused_FAR_sqft;
+
+        let fillColor = getColor(unusedFar); // Red (no/negative potential)
+
+        return {
+          fillColor: fillColor,
+          weight: 0.5,
+          opacity: 1,
+          color: "black",
+          fillOpacity: 0.7,
+        };
+      }
+      // Popup function for interactivity
+      function onEachFeature(feature, layer) {
+        if (feature.properties) {
+          const props = feature.properties;
+          layer.bindPopup(`
             <b>Unused FAR:</b> ${props.Unused_FAR}<br>
             <b>Used FAR:</b> ${props.Used_FAR}<br>
             <b>Max Allowed FAR:</b> ${props.Max_FAR}
         `);
-    }
-  }
-  // Load your GeoJSON data and apply the styles
-  fetch('gdf_property_with_zoning.geojson')
-    .then(response => response.json())
-    .then(data => {
-      L.geoJSON(data, {
-        style: getStyle,
-        onEachFeature: onEachFeature
-      }).addTo(map);
-    });
-  
-  fetch('./cambridge/combined.geojson')
-    .then(response => response.json())
-    .then(data => {
-      L.geoJSON(data, {
-        style: getStyle,
-        onEachFeature: onEachFeature
-      }).addTo(map);
-    });
-</script>
-</body>
+        }
+      }
+
+      const legend = L.control({ position: "topleft" });
+
+      legend.onAdd = function (map) {
+        const div = L.DomUtil.create("div", "info legend");
+        const grades = [0, 10000, 30000, 60000, 100000, 250000];
+        const labels = [];
+
+        // This loop builds the legend's content
+        for (let i = 0; i < grades.length; i++) {
+          labels.push(
+            '<div style="background:' +
+              getColor(grades[i] + 1) +
+              '; width: 10px; height: 10px; display: inline-block; margin-right: 5px;"></div> ' +
+              grades[i].toLocaleString() +
+              (grades[i + 1]
+                ? "&ndash;" + grades[i + 1].toLocaleString()
+                : "+") +
+              " sq ft"
+          );
+        }
+
+        labels.unshift(
+          '<div style="background:#808080; width: 10px; height: 10px; display: inline-block; margin-right: 5px;"></div> 0 (No Potential)'
+        );
+        div.innerHTML = "<h4>Potential (sq ft)</h4>" + labels.join("<br>");
+        return div;
+      };
+
+      legend.addTo(map);
+      // Load your GeoJSON data and apply the styles
+      fetch("gdf_property_with_zoning.geojson")
+        .then((response) => response.json())
+        .then((data) => {
+          L.geoJSON(data, {
+            style: getStyle,
+            onEachFeature: onEachFeature,
+          }).addTo(map);
+        });
+    </script>
+  </body>
 </html>
