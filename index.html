@@ -20,15 +20,24 @@
         bottom: 0;
         width: 100%;
       }
+
+      .legend {
+        padding: 8px 24px;
+        background: white; /* This sets the background to white */
+        border-radius: 5px; /* Adds rounded corners */
+        box-shadow: 0 0 15px rgba(0,0,0,0.2); /* Adds a subtle shadow */
+    }
     </style>
   </head>
   <body>
     <div id="map"></div>
     <script>
       function getColor(sqft) {
-        if (sqft > 400000) return "#800080"; // Purple
-        if (sqft > 150000) return "#d73027"; // Red
-        if (sqft > 50000) return "#fc8d59"; // Orange
+        if (sqft > 250000) return "#BE6922"; // Purple
+        if (sqft > 100000) return "#CA9A5C"; // Purple
+        if (sqft > 60000) return "#C6A44D"; // Purple
+        if (sqft > 30000) return "#C6A44D"; // Red
+        if (sqft > 10000) return "#CFB874"; // Orange
         if (sqft > 0) return "#fee08b"; // Yellow
         return "#D4D4D4"; // Gray
       }
@@ -73,7 +82,7 @@
 
       legend.onAdd = function (map) {
         const div = L.DomUtil.create("div", "info legend");
-        const grades = [0, 50000, 150000, 400000];
+        const grades = [0, 10000, 30000, 60000, 100000, 250000];
         const labels = [];
 
         // This loop builds the legend's content
