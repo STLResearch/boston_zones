@@ -5,14 +5,6 @@ import numpy as np
 
 # from shapely.errors import WKTReadingError
 
-def get_heatmap_color(used_far):
-    if used_far >= 2.0:
-        return '#2a9d8f';
-    elif used_far >= 0:
-        return '#e9c46a';
-    else:
-        return '#e76f51';
-
 combined_df = pd.read_csv("cambridge/final.csv")
 zoning_gdf = gpd.read_file("cambridge/zones.geojson")
 
@@ -183,6 +175,10 @@ gdf_property_with_zoning.rename(
 
 print("CRS", gdf_property_with_zoning.crs)
 
+
+# Todo: Remove conversion as data would be in Meter square
+SQM_TO_SQFT = 10.7639
+
 gdf_property_with_zoning = gdf_property_with_zoning.to_crs(epsg=26986)
 gdf_property_with_zoning['lot_area_m2'] = gdf_property_with_zoning.geometry.area
 gdf_property_with_zoning['building_area_m2'] = gdf_property_with_zoning['Building_Area_sqft'] * 0.092903
@@ -190,9 +186,11 @@ gdf_property_with_zoning['building_area_m2'] = gdf_property_with_zoning['Buildin
 gdf_property_with_zoning['Used_FAR'] = gdf_property_with_zoning['building_area_m2'] / gdf_property_with_zoning['lot_area_m2']
 gdf_property_with_zoning['Unused_FAR'] = gdf_property_with_zoning['Max_FAR'] - gdf_property_with_zoning['Used_FAR']
 
-gdf_property_with_zoning['fill'] = gdf_property_with_zoning['Unused_FAR'].apply(get_heatmap_color)
-gdf_property_with_zoning['stroke'] = 'black'
-gdf_property_with_zoning['stroke-width'] = 0.5
+
+gdf_property_with_zoning['Unused_FAR_m2'] = gdf_property_with_zoning['Unused_FAR'] * gdf_property_with_zoning['lot_area_m2']
+gdf_property_with_zoning['Unused_FAR_m2'] = gdf_property_with_zoning['Unused_FAR_m2'].fillna(0)
+
+gdf_property_with_zoning['Unused_FAR_sqft'] = gdf_property_with_zoning['Unused_FAR_m2'] * SQM_TO_SQFT
 
 print("CRS",gdf_property_with_zoning.crs)
 gdf_property_with_zoning = gdf_property_with_zoning.to_crs(epsg=4326)
