@@ -69,6 +69,8 @@ gdf_property_with_zoning.rename(columns={
     'shape_wkt_left': 'shape_wkt',
 }, inplace=True)
 
+SQM_TO_SQFT = 10.7639
+
 
 print("CRS",gdf_property_with_zoning.crs)
 
@@ -78,15 +80,16 @@ gdf_property_with_zoning['building_area_m2'] = gdf_property_with_zoning['Buildin
 
 gdf_property_with_zoning['Used_FAR'] = gdf_property_with_zoning['building_area_m2'] / gdf_property_with_zoning['lot_area_m2']
 gdf_property_with_zoning['Unused_FAR'] = gdf_property_with_zoning['Max_FAR'] - gdf_property_with_zoning['Used_FAR']
+gdf_property_with_zoning['Unused_FAR_m2'] = gdf_property_with_zoning['Unused_FAR'] * gdf_property_with_zoning['lot_area_m2']
+gdf_property_with_zoning['Unused_FAR_m2'] = gdf_property_with_zoning['Unused_FAR_m2'].fillna(0)
 
-gdf_property_with_zoning['fill'] = gdf_property_with_zoning['Unused_FAR'].apply(get_heatmap_color)
-gdf_property_with_zoning['stroke'] = 'black'
-gdf_property_with_zoning['stroke-width'] = 0.5
+gdf_property_with_zoning['Unused_FAR_sqft'] = gdf_property_with_zoning['Unused_FAR_m2'] * SQM_TO_SQFT
 
-print("CRS",gdf_property_with_zoning.crs)
+print('MAX Unused FAR sqft',gdf_property_with_zoning['Unused_FAR_sqft'].max())
+print('MIN Unused FAR sqft',gdf_property_with_zoning['Unused_FAR_sqft'].min())
+
+
 gdf_property_with_zoning = gdf_property_with_zoning.to_crs(epsg=4326)
-
-print("CRS",gdf_property_with_zoning.crs)
 
 gdf_property_with_zoning.to_file('gdf_property_with_zoning.geojson', driver='GeoJSON')
 # gdf_property_with_zoning.to_csv('gdf_property_with_zoning.csv')
