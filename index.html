@@ -25,8 +25,8 @@
         padding: 8px 24px;
         background: white; /* This sets the background to white */
         border-radius: 5px; /* Adds rounded corners */
-        box-shadow: 0 0 15px rgba(0,0,0,0.2); /* Adds a subtle shadow */
-    }
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); /* Adds a subtle shadow */
+      }
     </style>
   </head>
   <body>
@@ -107,8 +107,17 @@
       };
 
       legend.addTo(map);
-      // Load your GeoJSON data and apply the styles
+
       fetch("gdf_property_with_zoning.geojson")
+        .then((response) => response.json())
+        .then((data) => {
+          L.geoJSON(data, {
+            style: getStyle,
+            onEachFeature: onEachFeature,
+          }).addTo(map);
+        });
+
+      fetch("./cambridge/combined.geojson")
         .then((response) => response.json())
         .then((data) => {
           L.geoJSON(data, {
