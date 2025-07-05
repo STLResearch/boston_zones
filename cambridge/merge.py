@@ -259,6 +259,42 @@ with open(file_path, "w") as json_file:
     # Use indent=4 to make the JSON file readable
     json.dump(overall_stats, json_file, indent=4)
 
+# print(gdf_property_with_zoning.info())
+
+zone_analysis = gdf_property_with_zoning.groupby('Zoning_Subdistrict').agg(
+    total_properties = ('ML', 'count'),
+    properties_with_potential=('Unused_FAR_sqft', lambda x: (x > 0).sum()),
+    total_potential_sqft=('Unused_FAR_sqft', 'sum'),
+)
+
+zone_analysis['percentage_with_potential'] = (
+    (zone_analysis['properties_with_potential'] / zone_analysis['total_properties']) * 100
+).fillna(0)
+
+zone_analysis['profit_estimation_usd'] = (
+    zone_analysis['total_potential_sqft'] * 75
+).fillna(0).apply(humanize_number)
+
+zone_analysis['total_properties'] = zone_analysis['total_properties'].apply(humanize_number)
+zone_analysis['properties_with_potential'] = zone_analysis['properties_with_potential'].apply(humanize_number)
+zone_analysis['total_potential_sqft'] = zone_analysis['total_potential_sqft'].apply(humanize_number)
+zone_analysis['percentage_with_potential'] = zone_analysis['percentage_with_potential'].apply(humanize_number)
+
+
+zone_analysis.reset_index(inplace=True)
+
+final_aggregates = pd.DataFrame({
+    'Zoning Subdistrict': zone_analysis['Zoning_Subdistrict'],
+    'Total Properties': zone_analysis['total_properties'],
+    'Properties with Potential': zone_analysis['properties_with_potential'],
+    'Total Potential sqft': zone_analysis['total_potential_sqft'],
+    'Percentage with Potential': zone_analysis['percentage_with_potential'],
+    'Profit Estimation ($)': zone_analysis['profit_estimation_usd'],
+})
+
+output_filename = 'zoning_analysis_summary_cambridge.xlsx'
+final_aggregates.to_excel(output_filename)
+
 
 gdf_property_with_zoning.to_file("cambridge/combined.geojson", driver="GeoJSON")
 

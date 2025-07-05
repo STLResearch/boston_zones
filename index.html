@@ -14,6 +14,7 @@
         margin: 0;
         padding: 0;
       }
+
       #map {
         position: absolute;
         top: 0;
@@ -101,6 +102,24 @@
       #profit {
         color: #27ae60;
       }
+
+      .download-section {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .download-btn {
+            display: inline-block;
+            background-color: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .download-btn:hover {
+            background-color: #229954;
+        }
     </style>
   </head>
   <body>
@@ -118,23 +137,36 @@
 
       <div id="boston-content" class="tab-content active">
         <div class="stats-grid" id="boston-stats"></div>
+        <div class="download-section">
+          <a
+            href="zoning_analysis_summary_boston.xlsx"
+            download
+            class="download-btn"
+          >
+            Download Boston Excel File
+          </a>
+        </div>
       </div>
       <div id="cambridge-content" class="tab-content">
         <div class="stats-grid" id="cambridge-stats"></div>
+        <div class="download-section">
+          <a href="zoning_analysis_summary_cambridge.xlsx" download class="download-btn">
+              Download Cambridge Excel File
+          </a>
+      </div>
       </div>
     </div>
     <div id="map"></div>
     <script>
       function getColor(sqft) {
+        const sqftForColor = sqft || 0;
 
-        const sqftForColor = sqft || 0
-        
         if (sqftForColor > 250000) return "#BE6922";
         if (sqftForColor > 100000 && sqftForColor < 250000) return "#CA9A5C";
         if (sqftForColor > 60000 && sqftForColor < 100000) return "#C6A44D";
         if (sqftForColor > 30000 && sqftForColor < 60000) return "#C6A44D";
-        if (sqftForColor > 10000 && sqftForColor < 30000) return "#CFB874"; 
-        if (sqftForColor < 10000) return "#fee08b"; 
+        if (sqftForColor > 10000 && sqftForColor < 30000) return "#CFB874";
+        if (sqftForColor < 10000) return "#fee08b";
         // return "#f0f0f0";
       }
 
@@ -171,9 +203,7 @@
             <b>Building Area sqft:</b> ${props?.Building_Area_humanize_sqft} sqft<br>
             <b>Total Lot Area:</b> ${props?.lot_area_humanize_sqft} sqft<br>
             <b>Max FAR:</b> ${props?.Max_FAR}<br>
-            <b>($) Amount of Unused FAR:</b> $${
-              props?.Unused_FAR_sqft_dollar_value
-            }
+            <b>($) Amount of Unused FAR:</b> $${props?.Unused_FAR_sqft_dollar_value}
         `);
         }
       }

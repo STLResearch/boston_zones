@@ -24,23 +24,16 @@ try:
     property_df = pd.read_csv("parcels_with_assessment.csv", low_memory=False)
     zoning_gdf = gpd.read_file("subdistricts.geojson")
 
-    # property_df['MAP_PAR_ID'] = property_df['MAP_PAR_ID'].astype(str)
-    # zoning_df['MAP_PAR_ID'] = zoning_df['MAP_PAR_ID'].astype(str)
 except FileNotFoundError as e:
     print(f"Error: {e}")
     exit()
 
 
 property_df.dropna(subset=["shape_wkt"], inplace=True)
-# zoning_df.dropna(subset=['shape_wkt'], inplace=True)
-
-# print(zoning_df.head(2))
 
 property_df["geometry"] = property_df["shape_wkt"].apply(load_wkt_geometry)
-# zoning_df['geometry'] = zoning_df['shape_wkt'].apply(load_wkt_geometry)
 
 property_gdf = gpd.GeoDataFrame(property_df, geometry="geometry", crs="EPSG:4326")
-# zoning_gdf = gpd.GeoDataFrame(zoning_df, geometry='geometry', crs='EPSG:4326')
 
 if zoning_gdf.crs != property_gdf.crs:
     print("CRS mismatch between property and zoning data")
@@ -143,9 +136,44 @@ overall_stats = {
     "center_lat": float(center_lat),
 }
 
+
 file_path = "overall_stats_boston.json"
 with open(file_path, "w") as json_file:
     json.dump(overall_stats, json_file, indent=4)
 
+
+zone_analysis = gdf_property_with_zoning.groupby('Zoning_Subdistrict').agg(
+    total_properties = ('MAP_PAR_ID', 'count'),
+    properties_with_potential=('Unused_FAR_sqft', lambda x: (x > 0).sum()),
+    total_potential_sqft=('Unused_FAR_sqft', 'sum'),
+)
+
+zone_analysis['percentage_with_potential'] = (
+    (zone_analysis['properties_with_potential'] / zone_analysis['total_properties']) * 100
+).fillna(0)
+
+zone_analysis['profit_estimation_usd'] = (
+    zone_analysis['total_potential_sqft'] * 75
+).fillna(0).apply(humanize_number)
+
+zone_analysis['total_properties'] = zone_analysis['total_properties'].apply(humanize_number)
+zone_analysis['properties_with_potential'] = zone_analysis['properties_with_potential'].apply(humanize_number)
+zone_analysis['total_potential_sqft'] = zone_analysis['total_potential_sqft'].apply(humanize_number)
+zone_analysis['percentage_with_potential'] = zone_analysis['percentage_with_potential'].apply(humanize_number)
+
+
+zone_analysis.reset_index(inplace=True)
+
+final_aggregates = pd.DataFrame({
+    'Zoning Subdistrict': zone_analysis['Zoning_Subdistrict'],
+    'Total Properties': zone_analysis['total_properties'],
+    'Properties with Potential': zone_analysis['properties_with_potential'],
+    'Total Potential sqft': zone_analysis['total_potential_sqft'],
+    'Percentage with Potential': zone_analysis['percentage_with_potential'],
+    'Profit Estimation ($)': zone_analysis['profit_estimation_usd'],
+})
+
+output_filename = 'zoning_analysis_summary_boston.xlsx'
+final_aggregates.to_excel(output_filename)
 
 gdf_property_with_zoning.to_file("gdf_property_with_zoning.geojson", driver="GeoJSON")
