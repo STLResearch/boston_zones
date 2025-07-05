@@ -134,8 +134,8 @@
         if (sqftForColor > 60000 && sqftForColor < 100000) return "#C6A44D";
         if (sqftForColor > 30000 && sqftForColor < 60000) return "#C6A44D";
         if (sqftForColor > 10000 && sqftForColor < 30000) return "#CFB874"; 
-        if (sqftForColor > 0 &&sqftForColor < 10000) return "#fee08b"; 
-        return "#f0f0f0";
+        if (sqftForColor < 10000) return "#fee08b"; 
+        // return "#f0f0f0";
       }
 
       // Initialize the map
@@ -251,11 +251,11 @@
         );
         const sqftCard = createStatCard(
           "Total Buildable Area",
-          `${Math.round(cityData.total_potential_sqft / 1000000)}M sq ft`
+          `${cityData.total_potential_sqft} sqft`
         );
         const profitCard = createStatCard(
           "Estimated Profit",
-          `$${Math.round(cityData.profit_estimation_usd / 1000000)}M`
+          `$${cityData.profit_estimation_usd}`
         );
         profitCard.querySelector("p").id = "profit";
 

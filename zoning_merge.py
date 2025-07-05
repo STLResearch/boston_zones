@@ -103,9 +103,6 @@ gdf_property_with_zoning["Unused_FAR_sqft"] = np.maximum(
 gdf_property_with_zoning["Unused_FAR_sqft"] = (gdf_property_with_zoning["Unused_FAR_sqft"]).fillna(0)
 
 
-
-
-
 gdf_property_with_zoning["Unused_FAR_sqft_dollar_value"] = (
     gdf_property_with_zoning["Unused_FAR_sqft"] * 75
 )
@@ -136,11 +133,12 @@ center_lon = center_point.x
 center_lat = center_point.y
 
 overall_stats = {
-    "total_properties": int(total_properties),
-    "properties_with_potential": int(properties_with_potential),
-    "total_potential_sqft": float(total_properties_in_sqft),
-    "profit_estimation_usd": float(amount_of_potential),
+    "total_properties": humanize_number(int(total_properties)),
+    "properties_with_potential": humanize_number(int(properties_with_potential)),
+    "total_potential_sqft": humanize_number(float(total_properties_in_sqft)),
+    "profit_estimation_usd": humanize_number(float(amount_of_potential)),
     "percentage_with_potential": float(percentage_of_properties_with_potential),
+
     "center_lon": float(center_lon),
     "center_lat": float(center_lat),
 }
