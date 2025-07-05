@@ -27,9 +27,102 @@
         border-radius: 5px; /* Adds rounded corners */
         box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); /* Adds a subtle shadow */
       }
+
+      .dashboard-container {
+        /* Makes the container "float" relative to the browser window */
+        position: fixed;
+
+        /* Centers the container on the screen */
+        top: 50%;
+        left: -6%;
+        /* transform: translate(-50%, -50%); */
+
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        width: 650px;
+        z-index: 1000;
+        transform: scale(0.65);
+      }
+
+      h1 {
+        text-align: left;
+        color: #2c3e50;
+        margin-top: 0;
+        margin-bottom: 30px;
+      }
+      .tab-buttons {
+        display: flex;
+        border-bottom: 2px solid #e0e0e0;
+        margin-bottom: 20px;
+      }
+      .tab-button {
+        padding: 10px 20px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-size: 1.1em;
+        color: #7f8c8d;
+        border-bottom: 3px solid transparent;
+      }
+      .tab-button.active {
+        color: #3498db;
+        border-bottom-color: #3498db;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .stat-card {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 5px solid #3498db;
+      }
+      .stat-card h2 {
+        margin: 0 0 10px;
+        font-size: 1.1em;
+        color: #555;
+      }
+      .stat-card p {
+        margin: 0;
+        font-size: 2em;
+        font-weight: bold;
+        color: #2c3e50;
+      }
+      #profit {
+        color: #27ae60;
+      }
     </style>
   </head>
   <body>
+    <div class="dashboard-container">
+      <h1>Development Potential Dashboard</h1>
+
+      <div class="tab-buttons">
+        <button class="tab-button active" onclick="switchTab('boston')">
+          Boston
+        </button>
+        <button class="tab-button" onclick="switchTab('cambridge')">
+          Cambridge
+        </button>
+      </div>
+
+      <div id="boston-content" class="tab-content active">
+        <div class="stats-grid" id="boston-stats"></div>
+      </div>
+      <div id="cambridge-content" class="tab-content">
+        <div class="stats-grid" id="cambridge-stats"></div>
+      </div>
+    </div>
     <div id="map"></div>
     <script>
       function getColor(sqft) {
@@ -71,8 +164,10 @@
         if (feature.properties) {
           const props = feature.properties;
           layer.bindPopup(`
-            <b>Unused FAR sqft:</b> ${props.Unused_FAR_sqft}<br>
-            <b>Max Allowed FAR:</b> ${props.Max_FAR}
+            <b>Unused FAR sqft:</b> ${props?.Unused_FAR_sqft.toFixed(
+              2
+            )} sqft<br>
+            <b>($) Amount of Unused FAR:</b> $${props?.Max_FAR * 75}
         `);
         }
       }
@@ -124,6 +219,86 @@
             onEachFeature: onEachFeature,
           }).addTo(map);
         });
+
+      function createStatCard(title, value) {
+        const card = document.createElement("div");
+        card.className = "stat-card";
+        const titleElement = document.createElement("h2");
+        titleElement.textContent = title;
+        const valueElement = document.createElement("p");
+        valueElement.textContent = value;
+        card.appendChild(titleElement);
+        card.appendChild(valueElement);
+        return card;
+      }
+
+      // --- Renders the stats for a given city ---
+      function renderStats(cityData, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = ""; // Clear previous content
+
+        const totalCard = createStatCard(
+          "Total Properties",
+          cityData.total_properties.toLocaleString()
+        );
+        const potentialCard = createStatCard(
+          "Properties with Potential",
+          `${cityData.properties_with_potential.toLocaleString()} (${cityData.percentage_with_potential.toFixed(
+            1
+          )}%)`
+        );
+        const sqftCard = createStatCard(
+          "Total Buildable Area",
+          `${Math.round(cityData.total_potential_sqft / 1000000)}M sq ft`
+        );
+        const profitCard = createStatCard(
+          "Estimated Profit",
+          `$${Math.round(cityData.profit_estimation_usd / 1000000)}M`
+        );
+        profitCard.querySelector("p").id = "profit";
+
+        container.appendChild(totalCard);
+        container.appendChild(potentialCard);
+        container.appendChild(sqftCard);
+        container.appendChild(profitCard);
+      }
+
+      // --- Handles switching between tabs ---
+      function switchTab(cityName) {
+        const contents = document.querySelectorAll(".tab-content");
+        contents.forEach((content) => content.classList.remove("active"));
+
+        const buttons = document.querySelectorAll(".tab-button");
+        buttons.forEach((button) => button.classList.remove("active"));
+
+        document.getElementById(`${cityName}-content`).classList.add("active");
+        document
+          .querySelector(`[onclick="switchTab('${cityName}')"]`)
+          .classList.add("active");
+      }
+
+      // --- Load data for both cities when the page loads ---
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("DOMContentLoaded");
+        const bostonPromise = fetch("overall_stats_boston.json").then((res) =>
+          res.json()
+        );
+        const cambridgePromise = fetch("overall_stats_cambridge.json").then(
+          (res) => res.json()
+        );
+
+        Promise.all([bostonPromise, cambridgePromise])
+          .then(([bostonData, cambridgeData]) => {
+            renderStats(bostonData, "boston-stats");
+            renderStats(cambridgeData, "cambridge-stats");
+          })
+          .catch((error) => {
+            console.error("Error loading data:", error);
+            alert(
+              "Could not load city data. Please make sure both JSON files are present."
+            );
+          });
+      });
     </script>
   </body>
 </html>

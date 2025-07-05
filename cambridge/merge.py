@@ -2,6 +2,7 @@ import pandas as pd
 import geopandas as gpd
 from shapely import wkt
 import numpy as np
+import json
 
 # from shapely.errors import WKTReadingError
 
@@ -192,10 +193,35 @@ gdf_property_with_zoning['Unused_FAR_m2'] = gdf_property_with_zoning['Unused_FAR
 
 gdf_property_with_zoning['Unused_FAR_sqft'] = gdf_property_with_zoning['Unused_FAR_m2'] * SQM_TO_SQFT
 
-print("CRS",gdf_property_with_zoning.crs)
+
+gdf_property_with_zoning['Unused_FAR_sqft'] = np.maximum(gdf_property_with_zoning['Unused_FAR_sqft'], 0)
+
+
+
 gdf_property_with_zoning = gdf_property_with_zoning.to_crs(epsg=4326)
 
-print("CRS",gdf_property_with_zoning.crs)
+AMOUNT_OF_FAR_PER_SQFT = 75
+
+properties_with_potential = (gdf_property_with_zoning['Unused_FAR_sqft'] > 0).sum()
+total_properties = len(gdf_property_with_zoning)
+total_properties_in_sqft = gdf_property_with_zoning['Unused_FAR_sqft'].sum()
+percentage_of_properties_with_potential = (properties_with_potential / total_properties) * 100
+
+amount_of_potential = total_properties_in_sqft * AMOUNT_OF_FAR_PER_SQFT
+
+overall_stats = {
+    'total_properties': int(total_properties),
+    'properties_with_potential': int(properties_with_potential),
+    'total_potential_sqft': float(total_properties_in_sqft),
+    'profit_estimation_usd': float(amount_of_potential),
+    'percentage_with_potential': float(percentage_of_properties_with_potential)
+}
+
+file_path = 'overall_stats_cambridge.json'
+with open(file_path, 'w') as json_file:
+    # Use indent=4 to make the JSON file readable
+    json.dump(overall_stats, json_file, indent=4)
+
 
 gdf_property_with_zoning.to_file('cambridge/combined.geojson', driver='GeoJSON')
 

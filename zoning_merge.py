@@ -1,7 +1,9 @@
 import pandas as pd
 import geopandas as gpd
+import numpy as np
 from shapely import wkt
 from shapely.errors import WKTReadingError
+import json
 
 def load_wkt_geometry(wkt_string):
     try: 
@@ -10,13 +12,7 @@ def load_wkt_geometry(wkt_string):
         print(f"Error loading WKT: {e}")
         return None
 
-def get_heatmap_color(used_far):
-    if used_far >= 2.0:
-        return '#2a9d8f';
-    elif used_far >= 0:
-        return '#e9c46a';
-    else:
-        return '#e76f51';
+
 
 try: 
     property_df = pd.read_csv("parcels_with_assessment.csv", low_memory=False)
@@ -85,8 +81,40 @@ gdf_property_with_zoning['Unused_FAR_m2'] = gdf_property_with_zoning['Unused_FAR
 
 gdf_property_with_zoning['Unused_FAR_sqft'] = gdf_property_with_zoning['Unused_FAR_m2'] * SQM_TO_SQFT
 
+gdf_property_with_zoning['Unused_FAR_sqft'] = np.maximum(gdf_property_with_zoning['Unused_FAR_sqft'], 0)
+
 print('MAX Unused FAR sqft',gdf_property_with_zoning['Unused_FAR_sqft'].max())
 print('MIN Unused FAR sqft',gdf_property_with_zoning['Unused_FAR_sqft'].min())
+
+AMOUNT_OF_FAR_PER_SQFT = 75
+
+properties_with_potential = (gdf_property_with_zoning['Unused_FAR_sqft'] > 0).sum()
+total_properties = len(gdf_property_with_zoning)
+total_properties_in_sqft = gdf_property_with_zoning['Unused_FAR_sqft'].sum()
+percentage_of_properties_with_potential = (properties_with_potential / total_properties) * 100
+
+amount_of_potential = total_properties_in_sqft * AMOUNT_OF_FAR_PER_SQFT
+
+# overall_stats = {
+#     'total': total_properties,
+#     'properties_with_potential': properties_with_potential,
+#     'total_potential_sqft': total_properties_in_sqft,
+#     'profit_estimation': amount_of_potential,
+#     'percentage': percentage_of_properties_with_potential
+# }
+
+overall_stats = {
+    'total_properties': int(total_properties),
+    'properties_with_potential': int(properties_with_potential),
+    'total_potential_sqft': float(total_properties_in_sqft),
+    'profit_estimation_usd': float(amount_of_potential),
+    'percentage_with_potential': float(percentage_of_properties_with_potential)
+}
+
+file_path = 'overall_stats_boston.json'
+with open(file_path, 'w') as json_file:
+    # Use indent=4 to make the JSON file readable
+    json.dump(overall_stats, json_file, indent=4)
 
 
 gdf_property_with_zoning = gdf_property_with_zoning.to_crs(epsg=4326)
