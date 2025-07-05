@@ -150,7 +150,9 @@ unique_zones = gdf_final["ZONE_TYPE"].unique()
 print("Unique Zone Types:")
 print(unique_zones)
 
-gdf_final['Max_FAR'] = gdf_final['ZONE_TYPE'].apply(lambda x: assign_max_far(x, far_mapping))
+gdf_final["Max_FAR"] = gdf_final["ZONE_TYPE"].apply(
+    lambda x: assign_max_far(x, far_mapping)
+)
 
 
 columns_to_keep = [
@@ -181,20 +183,36 @@ print("CRS", gdf_property_with_zoning.crs)
 SQM_TO_SQFT = 10.7639
 
 gdf_property_with_zoning = gdf_property_with_zoning.to_crs(epsg=26986)
-gdf_property_with_zoning['lot_area_m2'] = gdf_property_with_zoning.geometry.area
-gdf_property_with_zoning['building_area_m2'] = gdf_property_with_zoning['Building_Area_sqft'] * 0.092903
+gdf_property_with_zoning["lot_area_m2"] = gdf_property_with_zoning.geometry.area
+gdf_property_with_zoning["building_area_m2"] = (
+    gdf_property_with_zoning["Building_Area_sqft"] * 0.092903
+)
 
-gdf_property_with_zoning['Used_FAR'] = gdf_property_with_zoning['building_area_m2'] / gdf_property_with_zoning['lot_area_m2']
-gdf_property_with_zoning['Unused_FAR'] = gdf_property_with_zoning['Max_FAR'] - gdf_property_with_zoning['Used_FAR']
+gdf_property_with_zoning["Used_FAR"] = (
+    gdf_property_with_zoning["building_area_m2"]
+    / gdf_property_with_zoning["lot_area_m2"]
+)
+gdf_property_with_zoning["Unused_FAR"] = (
+    gdf_property_with_zoning["Max_FAR"] - gdf_property_with_zoning["Used_FAR"]
+)
 
 
-gdf_property_with_zoning['Unused_FAR_m2'] = gdf_property_with_zoning['Unused_FAR'] * gdf_property_with_zoning['lot_area_m2']
-gdf_property_with_zoning['Unused_FAR_m2'] = gdf_property_with_zoning['Unused_FAR_m2'].fillna(0)
+gdf_property_with_zoning["Unused_FAR_m2"] = (
+    gdf_property_with_zoning["Unused_FAR"] * gdf_property_with_zoning["lot_area_m2"]
+)
+gdf_property_with_zoning["Unused_FAR_m2"] = gdf_property_with_zoning[
+    "Unused_FAR_m2"
+].fillna(0)
 
-gdf_property_with_zoning['Unused_FAR_sqft'] = gdf_property_with_zoning['Unused_FAR_m2'] * SQM_TO_SQFT
+gdf_property_with_zoning["Unused_FAR_sqft"] = np.maximum(
+    gdf_property_with_zoning["Unused_FAR_sqft"], 0
+)
+
+gdf_property_with_zoning["Unused_FAR_sqft"] = (
+    gdf_property_with_zoning["Unused_FAR_m2"] * SQM_TO_SQFT
+)
 
 
-gdf_property_with_zoning['Unused_FAR_sqft'] = np.maximum(gdf_property_with_zoning['Unused_FAR_sqft'], 0)
 
 
 
@@ -202,28 +220,38 @@ gdf_property_with_zoning = gdf_property_with_zoning.to_crs(epsg=4326)
 
 AMOUNT_OF_FAR_PER_SQFT = 75
 
-properties_with_potential = (gdf_property_with_zoning['Unused_FAR_sqft'] > 0).sum()
+properties_with_potential = (gdf_property_with_zoning["Unused_FAR_sqft"] > 0).sum()
 total_properties = len(gdf_property_with_zoning)
-total_properties_in_sqft = gdf_property_with_zoning['Unused_FAR_sqft'].sum()
-percentage_of_properties_with_potential = (properties_with_potential / total_properties) * 100
+total_properties_in_sqft = gdf_property_with_zoning["Unused_FAR_sqft"].sum()
+percentage_of_properties_with_potential = (
+    properties_with_potential / total_properties
+) * 100
 
 amount_of_potential = total_properties_in_sqft * AMOUNT_OF_FAR_PER_SQFT
 
+center_point = gdf_property_with_zoning.geometry.union_all().centroid
+
+# Extract the longitude and latitude
+center_lon = center_point.x
+center_lat = center_point.y
+
 overall_stats = {
-    'total_properties': int(total_properties),
-    'properties_with_potential': int(properties_with_potential),
-    'total_potential_sqft': float(total_properties_in_sqft),
-    'profit_estimation_usd': float(amount_of_potential),
-    'percentage_with_potential': float(percentage_of_properties_with_potential)
+    "total_properties": int(total_properties),
+    "properties_with_potential": int(properties_with_potential),
+    "total_potential_sqft": float(total_properties_in_sqft),
+    "profit_estimation_usd": float(amount_of_potential),
+    "percentage_with_potential": float(percentage_of_properties_with_potential),
+    "center_lon": float(center_lon),
+    "center_lat": float(center_lat),
 }
 
-file_path = 'overall_stats_cambridge.json'
-with open(file_path, 'w') as json_file:
+file_path = "overall_stats_cambridge.json"
+with open(file_path, "w") as json_file:
     # Use indent=4 to make the JSON file readable
     json.dump(overall_stats, json_file, indent=4)
 
 
-gdf_property_with_zoning.to_file('cambridge/combined.geojson', driver='GeoJSON')
+gdf_property_with_zoning.to_file("cambridge/combined.geojson", driver="GeoJSON")
 
 
 # combined_gdf = gpd.GeoDataFrame(combined_df, geometry=gpd.GeoSeries.from_wkt(combined_df["shape_wkt"]))

@@ -3,5 +3,7 @@
     "properties_with_potential": 1260,
     "total_potential_sqft": 167384927.0966476,
     "profit_estimation_usd": 12553869532.24857,
-    "percentage_with_potential": 10.748102021666808
+    "percentage_with_potential": 10.748102021666808,
+    "center_lon": -71.12026145247445,
+    "center_lat": 42.376834880236586
 }

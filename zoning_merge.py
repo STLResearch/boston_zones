@@ -95,6 +95,14 @@ percentage_of_properties_with_potential = (properties_with_potential / total_pro
 
 amount_of_potential = total_properties_in_sqft * AMOUNT_OF_FAR_PER_SQFT
 
+gdf_property_with_zoning = gdf_property_with_zoning.to_crs(epsg=4326)
+
+center_point = gdf_property_with_zoning.geometry.union_all().centroid
+
+        # Extract the longitude and latitude
+center_lon = center_point.x
+center_lat = center_point.y
+
 # overall_stats = {
 #     'total': total_properties,
 #     'properties_with_potential': properties_with_potential,
@@ -103,12 +111,16 @@ amount_of_potential = total_properties_in_sqft * AMOUNT_OF_FAR_PER_SQFT
 #     'percentage': percentage_of_properties_with_potential
 # }
 
+print('Center point',center_lon,center_lat)
+
 overall_stats = {
     'total_properties': int(total_properties),
     'properties_with_potential': int(properties_with_potential),
     'total_potential_sqft': float(total_properties_in_sqft),
     'profit_estimation_usd': float(amount_of_potential),
-    'percentage_with_potential': float(percentage_of_properties_with_potential)
+    'percentage_with_potential': float(percentage_of_properties_with_potential),
+    'center_lon': float(center_lon),
+    'center_lat': float(center_lat)
 }
 
 file_path = 'overall_stats_boston.json'
@@ -117,7 +129,7 @@ with open(file_path, 'w') as json_file:
     json.dump(overall_stats, json_file, indent=4)
 
 
-gdf_property_with_zoning = gdf_property_with_zoning.to_crs(epsg=4326)
+
 
 gdf_property_with_zoning.to_file('gdf_property_with_zoning.geojson', driver='GeoJSON')
 # gdf_property_with_zoning.to_csv('gdf_property_with_zoning.csv')

@@ -265,6 +265,12 @@
 
       // --- Handles switching between tabs ---
       function switchTab(cityName) {
+        if (cityName === "boston") {
+          map.flyTo([42.29311348147553, -71.11238784172546], 13.5);
+        } else {
+          map.flyTo([42.376834880236586, -71.12026145247445], 15);
+        }
+
         const contents = document.querySelectorAll(".tab-content");
         contents.forEach((content) => content.classList.remove("active"));
 
