@@ -154,12 +154,11 @@ zone_analysis['percentage_with_potential'] = (
 
 zone_analysis['profit_estimation_usd'] = (
     zone_analysis['total_potential_sqft'] * 75
-).fillna(0).apply(humanize_number)
+).fillna(0).round(2)
 
-zone_analysis['total_properties'] = zone_analysis['total_properties'].apply(humanize_number)
-zone_analysis['properties_with_potential'] = zone_analysis['properties_with_potential'].apply(humanize_number)
-zone_analysis['total_potential_sqft'] = zone_analysis['total_potential_sqft'].apply(humanize_number)
-zone_analysis['percentage_with_potential'] = zone_analysis['percentage_with_potential'].apply(humanize_number)
+
+zone_analysis['total_potential_sqft'] = zone_analysis['total_potential_sqft'].round(2)
+zone_analysis['percentage_with_potential'] = zone_analysis['percentage_with_potential'].round(2)
 
 
 zone_analysis.reset_index(inplace=True)
@@ -169,9 +168,11 @@ final_aggregates = pd.DataFrame({
     'Total Properties': zone_analysis['total_properties'],
     'Properties with Potential': zone_analysis['properties_with_potential'],
     'Total Potential sqft': zone_analysis['total_potential_sqft'],
-    'Percentage with Potential': zone_analysis['percentage_with_potential'],
+    'Percentage with Potential (%)': zone_analysis['percentage_with_potential'],
     'Profit Estimation ($)': zone_analysis['profit_estimation_usd'],
 })
+
+final_aggregates.round(2)
 
 output_filename = 'zoning_analysis_summary_boston.xlsx'
 final_aggregates.to_excel(output_filename)
