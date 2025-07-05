@@ -3,8 +3,16 @@ import geopandas as gpd
 from shapely import wkt
 import numpy as np
 import json
+from numerize import numerize
 
 # from shapely.errors import WKTReadingError
+
+
+def humanize_number(number):
+    if number is None or np.isnan(number) or number <= 0:
+        return 0
+    return numerize.numerize(number)
+
 
 combined_df = pd.read_csv("cambridge/final.csv")
 zoning_gdf = gpd.read_file("cambridge/zones.geojson")
@@ -176,43 +184,43 @@ gdf_property_with_zoning.rename(
     inplace=True,
 )
 
-print("CRS", gdf_property_with_zoning.crs)
-
-
 # Todo: Remove conversion as data would be in Meter square
 SQM_TO_SQFT = 10.7639
 
 gdf_property_with_zoning = gdf_property_with_zoning.to_crs(epsg=26986)
-gdf_property_with_zoning["lot_area_m2"] = gdf_property_with_zoning.geometry.area
-gdf_property_with_zoning["building_area_m2"] = (
-    gdf_property_with_zoning["Building_Area_sqft"] * 0.092903
+
+gdf_property_with_zoning["lot_area_sqft"] = (
+    gdf_property_with_zoning.geometry.area * SQM_TO_SQFT
 )
 
 gdf_property_with_zoning["Used_FAR"] = (
-    gdf_property_with_zoning["building_area_m2"]
-    / gdf_property_with_zoning["lot_area_m2"]
+    gdf_property_with_zoning["Building_Area_sqft"]
+    / gdf_property_with_zoning["lot_area_sqft"]
 )
+
 gdf_property_with_zoning["Unused_FAR"] = (
     gdf_property_with_zoning["Max_FAR"] - gdf_property_with_zoning["Used_FAR"]
 )
 
 
-gdf_property_with_zoning["Unused_FAR_m2"] = (
-    gdf_property_with_zoning["Unused_FAR"] * gdf_property_with_zoning["lot_area_m2"]
+gdf_property_with_zoning["Unused_FAR_sqft"] = (
+    gdf_property_with_zoning["Unused_FAR"] * gdf_property_with_zoning["lot_area_sqft"]
 )
-gdf_property_with_zoning["Unused_FAR_m2"] = gdf_property_with_zoning[
-    "Unused_FAR_m2"
-].fillna(0)
 
 gdf_property_with_zoning["Unused_FAR_sqft"] = np.maximum(
     gdf_property_with_zoning["Unused_FAR_sqft"], 0
 )
 
-gdf_property_with_zoning["Unused_FAR_sqft"] = (
-    gdf_property_with_zoning["Unused_FAR_m2"] * SQM_TO_SQFT
+
+gdf_property_with_zoning["Unused_FAR_sqft_dollar_value"] = (
+    gdf_property_with_zoning["Unused_FAR_sqft"] * 75
 )
-
-
+gdf_property_with_zoning["Unused_FAR_sqft_dollar_value"] = gdf_property_with_zoning[
+    "Unused_FAR_sqft_dollar_value"
+].apply(humanize_number)
+gdf_property_with_zoning["lot_area_humanize_sqft"] = gdf_property_with_zoning["lot_area_sqft"].apply(humanize_number)
+gdf_property_with_zoning["Building_Area_humanize_sqft"] = gdf_property_with_zoning["Building_Area_sqft"].apply(humanize_number)
+gdf_property_with_zoning["Unused_FAR_humanize_sqft"] = (gdf_property_with_zoning["Unused_FAR_sqft"]).apply(humanize_number)
 
 
 

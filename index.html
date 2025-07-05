@@ -126,13 +126,16 @@
     <div id="map"></div>
     <script>
       function getColor(sqft) {
-        if (sqft > 250000) return "#BE6922"; // Purple
-        if (sqft > 100000) return "#CA9A5C"; // Purple
-        if (sqft > 60000) return "#C6A44D"; // Purple
-        if (sqft > 30000) return "#C6A44D"; // Red
-        if (sqft > 10000) return "#CFB874"; // Orange
-        if (sqft > 0) return "#fee08b"; // Yellow
-        return "#D4D4D4"; // Gray
+
+        const sqftForColor = sqft || 0
+        
+        if (sqftForColor > 250000) return "#BE6922";
+        if (sqftForColor > 100000 && sqftForColor < 250000) return "#CA9A5C";
+        if (sqftForColor > 60000 && sqftForColor < 100000) return "#C6A44D";
+        if (sqftForColor > 30000 && sqftForColor < 60000) return "#C6A44D";
+        if (sqftForColor > 10000 && sqftForColor < 30000) return "#CFB874"; 
+        if (sqftForColor > 0 &&sqftForColor < 10000) return "#fee08b"; 
+        return "#f0f0f0";
       }
 
       // Initialize the map
@@ -164,10 +167,13 @@
         if (feature.properties) {
           const props = feature.properties;
           layer.bindPopup(`
-            <b>Unused FAR sqft:</b> ${props?.Unused_FAR_sqft.toFixed(
-              2
-            )} sqft<br>
-            <b>($) Amount of Unused FAR:</b> $${props?.Max_FAR * 75}
+            <b>Unused FAR sqft:</b> ${props?.Unused_FAR_humanize_sqft} sqft<br>
+            <b>Building Area sqft:</b> ${props?.Building_Area_humanize_sqft} sqft<br>
+            <b>Total Lot Area:</b> ${props?.lot_area_humanize_sqft} sqft<br>
+            <b>Max FAR:</b> ${props?.Max_FAR}<br>
+            <b>($) Amount of Unused FAR:</b> $${
+              props?.Unused_FAR_sqft_dollar_value
+            }
         `);
         }
       }
@@ -192,10 +198,6 @@
               " sq ft"
           );
         }
-
-        labels.unshift(
-          '<div style="background:#808080; width: 10px; height: 10px; display: inline-block; margin-right: 5px;"></div> 0 (No Potential)'
-        );
         div.innerHTML = "<h4>Potential (sq ft)</h4>" + labels.join("<br>");
         return div;
       };
