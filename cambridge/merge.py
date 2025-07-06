@@ -297,6 +297,3 @@ final_aggregates.to_excel(output_filename)
 
 
 gdf_property_with_zoning.to_file("cambridge/combined.geojson", driver="GeoJSON")
-
-
-# combined_gdf = gpd.GeoDataFrame(combined_df, geometry=gpd.GeoSeries.from_wkt(combined_df["shape_wkt"]))
