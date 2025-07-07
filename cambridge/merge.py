@@ -38,7 +38,6 @@ def create_far_mapping():
     """
 
     far_mapping = {
-        # Residential Districts
         "A-1": 0.50,
         "A-2": 0.50,
         "B": 0.50,
@@ -50,15 +49,13 @@ def create_far_mapping():
         "C-2B": 1.75,
         "C-3": 3.00,
         "C-3A": 3.00,
-        "C-3B": 4.00,  # Higher of 3.00/4.00
-        # Office Districts
+        "C-3B": 4.00, 
         "O-1": 0.75,
-        "O-2": 2.00,  # Higher of 1.50/2.00
-        "O-2A": 1.50,  # Higher of 1.25/1.50
-        "O-3": 3.00,  # Higher of 2.00/3.00
-        "O-3A": 3.00,  # Higher of 2.00/3.00
-        # Business Districts
-        "BA": 1.75,  # Higher of 1.00/1.75
+        "O-2": 2.00,
+        "O-2A": 1.50,
+        "O-3": 3.00,
+        "O-3A": 3.00,
+        "BA": 1.75,
         "BA-1": 1.00,  # Higher of 1.00/0.75
         "BA-2": 1.75,  # Higher of 1.00/1.75
         "BA-3": 0.75,
@@ -69,7 +66,6 @@ def create_far_mapping():
         "BB-2": 3.00,  # Higher of 1.50/3.00
         "BC": 2.00,  # Higher of 1.25/2.00
         "BC-1": 3.00,  # Higher of 2.75/3.00
-        # Industrial Districts
         "IA-1": 1.50,  # Higher of 1.25/1.50
         "IA-2": 4.00,  # Higher of 2.75/4.00
         "IA": 1.50,  # Higher of 1.25/1.50
@@ -77,9 +73,7 @@ def create_far_mapping():
         "IB-2": 0.75,
         "IB": 4.00,  # Higher of 2.75/4.00
         "IC": 1.00,
-        # Open Space
         "OS": 0.25,
-        # Special Districts (based on similar base districts with exceptions)
         "SD-1": 1.50,  # Similar to IA-1
         "SD-2": 0.50,  # Similar to B
         "SD-3": 1.00,  # Has aggregate limit, using conservative estimate
@@ -97,13 +91,11 @@ def create_far_mapping():
         "SD-12": 1.75,  # Similar to C-2B
         "SD-13": 1.75,  # Similar to C-2
         "SD-14": 0.75,  # Similar to C-1
-        "SD-15": 4.00,  # Similar to IB with additional allowances
-        # Mixed Use and Special Development Districts
+        "SD-15": 4.00,
         "MXD": 3.00,  # Mixed Use Development - conservative estimate
         "ASD": 3.00,  # Ames Street District (part of MXD)
         "CRDD": 2.50,  # Cambridgeport Revitalization - conservative estimate
-        "NP": 3.00,  # North Point (can go higher with PUD-6)
-        # Planned Unit Developments (using typical maximums)
+        "NP": 3.00,
         "PUD-1": 3.00,
         "PUD-2": 4.00,  # 4.0 for residential
         "PUD-3": 3.00,
@@ -117,8 +109,7 @@ def create_far_mapping():
         "PUD-7": 3.25,  # Based on total square footage allowance
         "PUD-8": 2.00,  # Conservative estimate based on new GFA limits
         "PUD-CDK": 2.50,  # Conservative estimate
-        "PUD-KS": 3.00,  # With restrictions
-        # Overlay Districts (modify base districts)
+        "PUD-KS": 3.00,
         "AOD-Q": 2.00,  # Conservative estimate for overlay
         "AOD-5": 2.00,  # Conservative estimate for overlay
         "AOD-6": 2.00,  # Conservative estimate for overlay
